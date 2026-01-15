@@ -61,3 +61,4 @@ class ConvexityDetector(BasePressureDetector):
             explanation=f"Convexity pressure detected for {symbol} with magnitude {magnitude:.2f}",
         )
 
+

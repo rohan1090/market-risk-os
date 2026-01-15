@@ -9,3 +9,4 @@ InteractionID = NewType("InteractionID", str)
 StateID = NewType("StateID", str)
 GateID = NewType("GateID", str)
 
+

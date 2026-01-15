@@ -62,6 +62,30 @@ risk_state = result["risk_state"]
 behavior_gate = result["behavior_gate"]
 ```
 
+### Using Schwab Provider (Optional)
+
+To use the Schwab data provider for real market data:
+
+1. Set environment variables (see `.env.example`):
+   ```bash
+   export SCHWAB_CLIENT_ID=your_client_id
+   export SCHWAB_CLIENT_SECRET=your_client_secret
+   export SCHWAB_REDIRECT_URI=your_redirect_uri
+   export SCHWAB_TOKEN_PATH=.schwab_token.json
+   ```
+
+2. Initialize orchestrator with Schwab provider:
+   ```python
+   from market_risk_os.io.providers import SchwabDataProvider
+   from market_risk_os.pipeline import PipelineOrchestrator
+   
+   provider = SchwabDataProvider()
+   orchestrator = PipelineOrchestrator(provider=provider)
+   result = orchestrator.run("SPX")
+   ```
+
+**Note**: The Schwab provider is currently a skeleton implementation. Full OAuth integration is required for production use. Unit tests use fake providers and do not require Schwab credentials.
+
 ## Architecture
 
 ### Components

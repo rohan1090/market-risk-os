@@ -13,6 +13,7 @@ from ..core import (
 from ..features import FeatureStore
 from ..gate import BehaviorGateController
 from ..interactions import BaseInteractionEvaluator
+from ..io.providers import MarketDataProvider
 from ..pressures import get_detectors, register_default_detectors
 from ..state import RiskStateEstimator
 
@@ -22,6 +23,7 @@ class PipelineOrchestrator:
     
     def __init__(
         self,
+        provider: Optional[MarketDataProvider] = None,
         feature_store: Optional[FeatureStore] = None,
         interaction_evaluator: Optional[BaseInteractionEvaluator] = None,
         state_estimator: Optional[RiskStateEstimator] = None,
@@ -31,12 +33,14 @@ class PipelineOrchestrator:
         Initialize the pipeline orchestrator.
         
         Args:
+            provider: Optional market data provider (passed to FeatureStore)
             feature_store: Feature store instance (creates default if None)
             interaction_evaluator: Interaction evaluator (creates default if None)
             state_estimator: Risk state estimator (creates default if None)
             gate_controller: Behavior gate controller (creates default if None)
         """
-        self.feature_store = feature_store or FeatureStore()
+        self.provider = provider
+        self.feature_store = feature_store or FeatureStore(provider=provider)
         self.interaction_evaluator = (
             interaction_evaluator or BaseInteractionEvaluator()
         )
@@ -67,7 +71,18 @@ class PipelineOrchestrator:
         register_default_detectors()
         
         # Step 1: Feature extraction
-        features = self.feature_store.extract_features(symbol)
+        # If provider is available, get price bars and compute vol features
+        if self.provider is not None:
+            bars = self.feature_store.get_price_bars(symbol, now, lookback_days=120)
+            if bars:
+                vol_features = self.feature_store.compute_vol_features(bars)
+                # Merge vol features into base features
+                base_features = self.feature_store.extract_features(symbol)
+                features = {**base_features, **vol_features}
+            else:
+                features = self.feature_store.extract_features(symbol)
+        else:
+            features = self.feature_store.extract_features(symbol)
         
         # Step 2: Pressure detection (using registry)
         pressures = self._detect_pressures(symbol, features, now)
@@ -84,8 +99,7 @@ class PipelineOrchestrator:
         )
         
         # Step 5: Behavior gate creation
-        gate_id = GateID(f"gate_{symbol}_{self._generate_timestamp(now)}")
-        behavior_gate = self.gate_controller.create_gate(risk_state, gate_id)
+        behavior_gate = self.gate_controller.build_gate(risk_state, now)
         
         return {
             "symbol": symbol,

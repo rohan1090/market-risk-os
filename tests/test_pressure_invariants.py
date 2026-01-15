@@ -356,3 +356,4 @@ class TestValidationInvariants:
         with pytest.raises(ValueError):
             require_finite("test", float("-inf"))
 
+

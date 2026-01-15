@@ -1,5 +1,6 @@
 """Pytest fixtures for interaction and state estimation tests."""
 
+import socket
 from datetime import datetime, timezone
 from typing import List
 
@@ -18,6 +19,50 @@ from market_risk_os.core import (
 
 # Fixed timestamp for deterministic tests
 fixed_now_utc = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+
+@pytest.fixture(autouse=True)
+def _no_network_tripwire(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
+    """
+    Disable network access for unit tests by default.
+
+    Escape hatch:
+    - If a test is marked with @pytest.mark.integration, do not block network.
+
+    Rationale:
+    - Unit tests must be fully offline/deterministic and must never hit external APIs.
+    """
+    if request.node.get_closest_marker("integration") is not None:
+        return
+
+    def _blocked(*args, **kwargs):
+        raise RuntimeError("Network disabled in unit tests")
+
+    # Core sockets
+    monkeypatch.setattr(socket, "socket", _blocked, raising=True)
+    monkeypatch.setattr(socket, "create_connection", _blocked, raising=True)
+
+    # Optional HTTP client libs (best-effort, no new deps)
+    try:
+        import requests  # type: ignore
+
+        monkeypatch.setattr(requests, "get", _blocked, raising=True)
+        monkeypatch.setattr(requests, "post", _blocked, raising=True)
+        monkeypatch.setattr(requests, "request", _blocked, raising=True)
+        monkeypatch.setattr(requests, "Session", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("Network disabled in unit tests")), raising=True)
+    except Exception:
+        pass
+
+    try:
+        import httpx  # type: ignore
+
+        monkeypatch.setattr(httpx, "get", _blocked, raising=True)
+        monkeypatch.setattr(httpx, "post", _blocked, raising=True)
+        monkeypatch.setattr(httpx, "request", _blocked, raising=True)
+        monkeypatch.setattr(httpx.Client, "request", _blocked, raising=True)
+        monkeypatch.setattr(httpx.AsyncClient, "request", _blocked, raising=True)
+    except Exception:
+        pass
 
 
 @pytest.fixture

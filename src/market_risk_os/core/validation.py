@@ -61,3 +61,4 @@ def ensure_m11(name: str, x: float) -> float:
     require_finite(name, x)
     return max(-1.0, min(1.0, x))
 
+

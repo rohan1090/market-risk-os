@@ -117,3 +117,4 @@ The detector registry (`registry.py`) provides:
 
 The orchestrator uses the registry to discover and run detectors automatically.
 
+

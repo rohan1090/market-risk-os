@@ -30,3 +30,4 @@ def ensure_utc(dt: Optional[datetime] = None) -> datetime:
     # Convert to UTC if not already
     return dt.astimezone(timezone.utc)
 
+

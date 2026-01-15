@@ -66,3 +66,4 @@ class VolatilityDetector(BasePressureDetector):
             explanation=f"Volatility pressure detected for {symbol} with magnitude {magnitude:.2f}",
         )
 
+

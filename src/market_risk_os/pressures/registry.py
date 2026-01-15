@@ -59,9 +59,10 @@ class DetectorRegistry:
         synthetic = SyntheticDetector()
         self.register_detector(synthetic)
         
-        # Future: Register real detectors here
-        # from .volatility import VolatilityDetector
-        # self.register_detector(VolatilityDetector())
+        # Register volatility regime shift detector
+        from .detectors.volatility_regime_shift import VolatilityRegimeShiftDetector
+        vol_regime = VolatilityRegimeShiftDetector()
+        self.register_detector(vol_regime)
 
 
 # Global registry instance
