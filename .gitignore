@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+.schwab_token.json
+*.log
+.venv/
+venv/
+
+# OS
+.DS_Store
+
+# pytest
+.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+.env
